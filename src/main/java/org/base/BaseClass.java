@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
@@ -20,19 +21,16 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -58,8 +56,7 @@ import com.github.javafaker.Faker;
 public class BaseClass {
 	public WebDriverWait wait;
 	public static WebDriver driver;
-	static WebElement element = null;
-	static WebElement targetelement = null;
+	WebElement element = null;
 	List<WebElement> listElement = null;
 	static String dummy;
 	public static String invalid;
@@ -100,32 +97,6 @@ public class BaseClass {
 		}
 		Actions actions = new Actions(driver);
 		actions.moveToElement(element).click().build().perform();
-	}
-
-	static String text;
-
-	public String checkErrorMessage(Object element, Object submitButton) {
-		int i = 0;
-		if (!this.conditionChecking(element, 3)) {
-			do {
-				this.clickButton(submitButton, 5, "JS Click");
-				i++;
-			} while ((!this.conditionChecking(element, 3)) && i < 5);
-		}
-		if (i == 5) {
-			text = "null";
-		} else {
-			text = this.getText(element, 10);
-		}
-		return text;
-	}
-
-	public void dragAndDrop(WebElement elementOrLocator, WebElement tragetLocator, int value) {
-		wait = new WebDriverWait(driver, value);
-		element = wait.until(ExpectedConditions.elementToBeClickable(elementOrLocator));
-		targetelement = wait.until(ExpectedConditions.elementToBeClickable(tragetLocator));
-		Actions actions = new Actions(driver);
-		actions.dragAndDrop(element, targetelement).build().perform();
 	}
 
 	public void mouseAction(Object elementOrLocator, int value) {
@@ -226,21 +197,6 @@ public class BaseClass {
 		wait.until(ExpectedConditions.numberOfWindowsToBe(tab));
 	}
 
-	public int checkResponseCode() throws IOException {
-		String url = driver.getCurrentUrl();
-		CloseableHttpClient httpClient = HttpClients.custom().setSSLHostnameVerifier((host, session) -> true).build();
-		HttpGet request = new HttpGet(url);
-		HttpResponse response = httpClient.execute(request);
-		int responseCode = response.getStatusLine().getStatusCode();
-		return responseCode;
-	}
-
-	public void windowsHandle(int value) {
-		Set<String> windowHandles = driver.getWindowHandles();
-		ArrayList<String> list = new ArrayList<String>(windowHandles);
-		driver.switchTo().window(list.get(value));
-	}
-
 	public Boolean conditionChecking(Object elementOrLocator, int value) {
 		Boolean text = false;
 		wait = new WebDriverWait(driver, value);
@@ -308,6 +264,7 @@ public class BaseClass {
 		} else if (elementOrLocator instanceof By) {
 			element = wait.until(ExpectedConditions.visibilityOfElementLocated((By) elementOrLocator));
 		}
+
 		Select select = new Select(element);
 		select.selectByIndex(num);
 	}
@@ -381,9 +338,6 @@ public class BaseClass {
 		case "Max 256 Characters":
 			dummy = RandomStringUtils.randomAlphabetic(257);
 			break;
-		case "Max 1000 Characters":
-			dummy = RandomStringUtils.randomAlphabetic(1000);
-			break;
 		case "Max 512 Characters":
 			dummy = RandomStringUtils.randomAlphabetic(512);
 			break;
@@ -402,8 +356,8 @@ public class BaseClass {
 		case "Max 4 Characters":
 			dummy = RandomStringUtils.randomNumeric(4);
 			break;
-		case "Max 3 Characters":
-			dummy = RandomStringUtils.randomNumeric(3);
+		case "Max 2 Characters":
+			dummy = RandomStringUtils.randomNumeric(2);
 			break;
 		case "Dummy Description":
 			int numberOfWords = 10;
@@ -464,9 +418,6 @@ public class BaseClass {
 		case "Dummy Lead Source":
 			dummy = generateRandomLeadSource() + " " + upper_Case;
 			break;
-		case "Dummy 8 Characters":
-			dummy = RandomStringUtils.randomAlphabetic(8).toUpperCase();
-			break;
 		}
 		return dummy;
 
@@ -483,23 +434,6 @@ public class BaseClass {
 		robot.keyPress(KeyEvent.VK_ENTER);
 		robot.keyRelease(KeyEvent.VK_ENTER);
 
-	}
-
-	static int i = 0;
-	static String randomNumeric;
-
-	public static String validationCharacterSize() {
-		Random r = new Random();
-		int u = 4;
-		int nextInt;
-		do {
-			nextInt = r.nextInt(u);
-		} while (nextInt == 0);
-		do {
-			randomNumeric = RandomStringUtils.randomNumeric(nextInt);
-		} while (Integer.parseInt(randomNumeric) >= 10 || randomNumeric.equals("0") || randomNumeric.equals("00")
-				|| randomNumeric.equals("000"));
-		return randomNumeric;
 	}
 
 	public static void ScreenShots(String path) throws IOException {
@@ -592,7 +526,51 @@ public class BaseClass {
 				}
 			}
 		}
-		fo = new FileOutputStream(System.getProperty("user.dir"));
+		if (function.equals("Store Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\Store.properties");
+		} else if (function.equals("Hub Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\Hub.properties");
+		} else if (function.equals("Catlogue Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\Catlogue.properties");
+		} else if (function.equals("Dummy Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\Dummy.properties");
+		} else if (function.equals("Phone Call Delivery Property")) {
+			fo = new FileOutputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Phone Call Delivery.properties");
+		} else if (function.equals("Customer Lookup")) {
+			fo = new FileOutputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Customer Lookup.properties");
+		} else if (function.equals("House Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\House_Account.properties");
+		} else if (function.equals("City Town Managment")) {
+			fo = new FileOutputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\City Town Mangement.properties");
+		} else if (function.equals("Lead Source")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\LeadSource.properties");
+		} else if (function.equals("Product Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\Product.properties");
+		} else if (function.equals("Category Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\Category.properties");
+		} else if (function.equals("Delivery Property")) {
+			fo = new FileOutputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Delivery Schedule.properties");
+		} else if (function.equals("Pickup Property")) {
+			fo = new FileOutputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Pickup Schedule.properties");
+		} else if (function.equals("User Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\User.properties");
+		} else if (function.equals("Order Zipcode Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\Order Zipcode.properties");
+		} else if (function.equals("House Setting Property")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\House Setting.properties");
+		} else if (function.equals("Discout Markup")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\Discout Markup.properties");
+		} else if (function.equals("Delivery Route")) {
+			fo = new FileOutputStream(System.getProperty("user.dir") + "\\Reusable Records\\Delivery Route.properties");
+		} else if (function.equals("Lead Source Walkin")) {
+			fo = new FileOutputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Lead Source Walkin.properties");
+		}
 		properties.store(fo, "Update Value");
 	}
 
@@ -600,9 +578,52 @@ public class BaseClass {
 
 	public static String getUpdatedPropertyFile(String value, String key) throws IOException {
 		Properties properties = new Properties();
-		if (value.equals("Registration Page")) {
+		if (value.equals("Store Page")) {
+			stream = new FileInputStream(System.getProperty("user.dir") + "\\Reusable Records\\Store.properties");
+		} else if (value.equals("Hub Page")) {
+			stream = new FileInputStream(System.getProperty("user.dir") + "\\Reusable Records\\Hub.properties");
+		} else if (value.equals("Catlogue Page")) {
+			stream = new FileInputStream(System.getProperty("user.dir") + "\\Reusable Records\\Catlogue.properties");
+		} else if (value.equals("Dummy Page")) {
+			stream = new FileInputStream(System.getProperty("user.dir") + "\\Reusable Records\\Dummy.properties");
+		} else if (value.equals("House_Page")) {
 			stream = new FileInputStream(
-					System.getProperty("user.dir") + "\\Reusable Records\\Registration.properties");
+					System.getProperty("user.dir") + "\\Reusable Records\\House_Account.properties");
+		} else if (value.equals("Order_Management")) {
+			stream = new FileInputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Order_Management.properties");
+		} else if (value.equals("Customer LookUp")) {
+			stream = new FileInputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Customer Lookup.properties");
+		} else if (value.equals("City Town Managment")) {
+			stream = new FileInputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\City Town Mangement.properties");
+		} else if (value.equals("Lead Source")) {
+			stream = new FileInputStream(System.getProperty("user.dir") + "\\Reusable Records\\LeadSource.properties");
+		} else if (value.equals("Product Page")) {
+			stream = new FileInputStream(System.getProperty("user.dir") + "\\Reusable Records\\Product.properties");
+		} else if (value.equals("Category Page")) {
+			stream = new FileInputStream(System.getProperty("user.dir") + "\\Reusable Records\\Category.properties");
+		} else if (value.equals("Delivery Page")) {
+			stream = new FileInputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Delivery Schedule.properties");
+		} else if (value.equals("Pickup Page")) {
+			stream = new FileInputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Pickup Schedule.properties");
+		} else if (value.equals("User Page")) {
+			stream = new FileInputStream(System.getProperty("user.dir") + "\\Reusable Records\\User.properties");
+		} else if (value.equals("House Setting")) {
+			stream = new FileInputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\House Setting.properties");
+		} else if (value.equals("Discout Markup")) {
+			stream = new FileInputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Discout Markup.properties");
+		} else if (value.equals("Delivery Route")) {
+			stream = new FileInputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Delivery Route.properties");
+		} else if (value.equals("Lead Source Walkin")) {
+			stream = new FileInputStream(
+					System.getProperty("user.dir") + "\\Reusable Records\\Lead Source Walkin.properties");
 		}
 		properties.load(stream);
 		dummy = (String) properties.get(key);
@@ -732,29 +753,63 @@ public class BaseClass {
 		return formatter.format(cal.getTime());
 	}
 
-	public static String excelRead(int sheetName, int row, int cell) throws IOException {
+	static String[] split;
+	DecimalFormat decimalFormat = new DecimalFormat("#");
+	public static final Map<String, String> mp = new LinkedHashMap<String, String>();
+
+	public Map<String, String> excelRead(String sheetName) throws IOException {
 		FileInputStream fis = new FileInputStream(
-				System.getProperty("user.dir") + "\\Reusable Records\\Zippy_Form_Excel_Sheet.xlsx");
+				System.getProperty("user.dir") + "\\Reusable Records\\Automation Records.xlsx");
 		Workbook workbook = WorkbookFactory.create(fis);
-		Sheet sheet = workbook.getSheetAt(sheetName);
-		Row r = sheet.getRow(row);
-		Cell c = r.getCell(cell);
-		String cellValue;
-		if (c.getCellType() == CellType.NUMERIC) {
-			double numericValue = c.getNumericCellValue();
-			cellValue = String.valueOf(numericValue);
-		} else if (c.getCellType() == CellType.STRING) {
-			String stringValue = c.getStringCellValue();
-			cellValue = stringValue;
-		} else {
-			cellValue = "Cell type not supported";
+		Sheet sheet = workbook.getSheet(sheetName);
+		Iterator<Row> iterator = sheet.iterator();
+		Row headerRow = iterator.next(); // Assuming the first row contains the header names
+
+		// Iterate through the cells to extract the values based on the header names
+		while (iterator.hasNext()) {
+			Row valueRow = iterator.next(); // Get the next row for values
+			Iterator<Cell> cellIterator = headerRow.cellIterator();
+			while (cellIterator.hasNext()) {
+				Cell cel = cellIterator.next();
+				String header = cel.getStringCellValue();
+				Cell valueCell = valueRow.getCell(cel.getColumnIndex());
+				if (valueCell.getCellType() == CellType.NUMERIC) {
+					// Handle numeric value
+					mp.put(header, String.valueOf(decimalFormat.format(valueCell.getNumericCellValue())));
+				} else if (valueCell.getCellType() == CellType.STRING) {
+					// Handle string value
+					mp.put(header, valueCell.getStringCellValue());
+				}
+			}
+			break;
 		}
-		return cellValue;
+		for (Map.Entry<String, String> value : mp.entrySet()) {
+			String value2 = value.getValue();
+			if (value2.contains(", ")) {
+				split = value2.split(", ");
+			}
+		}
+		try {
+			for (String text : split) {
+				String capitalizeEachWord = capitalizeEachWord(text.trim());
+				String xpath = "//*[text()='" + capitalizeEachWord + "']";
+				xpathMap.put(text, xpath);
+				checkMap.put(text, capitalizeEachWord);
+			}
+			for (Map.Entry<String, String> entry : xpathMap.entrySet()) {
+				if (conditionChecking(By.xpath(entry.getValue().replaceAll("Viop", "VOIP")), 5)) {
+					this.mouseActionClicks(By.xpath(entry.getValue().replaceAll("Viop", "VOIP")), 10);
+				}
+			}
+		} catch (Exception e) {
+		}
+		System.out.println(mp);
+		return mp;
 	}
 
 	public static String timeExcel(int sheetIndex, int rowIndex, int columnIndex) throws IOException, ParseException {
 		FileInputStream fis = new FileInputStream(
-				System.getProperty("user.dir") + "\\Reusable Records\\Zippy_Form_Excel_Sheet.xlsx");
+				System.getProperty("user.dir") + "\\Reusable Records\\Automation Records.xlsx");
 		Workbook workbook = WorkbookFactory.create(fis);
 		Sheet sheet = workbook.getSheetAt(sheetIndex);
 		Row row = sheet.getRow(rowIndex);
@@ -792,7 +847,7 @@ public class BaseClass {
 	public void permissionClick(int sheetName, int rowValue, int celValue, String firstPath, String lastPath)
 			throws IOException, InterruptedException {
 		FileInputStream excelFile = new FileInputStream(
-				System.getProperty("user.dir") + "\\Reusable Records\\Zippy_Form_Excel_Sheet.xlsx");
+				System.getProperty("user.dir") + "\\Reusable Records\\Automation Records.xlsx");
 		Workbook workbook = new XSSFWorkbook(excelFile);
 
 		Sheet sheet = workbook.getSheetAt(sheetName);
@@ -815,6 +870,7 @@ public class BaseClass {
 		}
 		workbook.close();
 		for (Map.Entry<String, String> entry : xpathMap.entrySet()) {
+//			System.out.println(entry.getValue().replaceAll("Viop", "VOIP"));
 			if (conditionChecking(By.xpath(entry.getValue().replaceAll("Viop", "VOIP")), 5)) {
 				this.mouseActionClicks(By.xpath(entry.getValue().replaceAll("Viop", "VOIP")), 10);
 			}
@@ -910,11 +966,6 @@ public class BaseClass {
 		JavascriptExecutor js = (JavascriptExecutor) driver;
 		js.executeScript("window.scrollTo(0, -document.body.scrollHeight);");
 		Thread.sleep(3000);
-	}
-
-	public WebElement shadowRootPath(String value) {
-		JavascriptExecutor js = (JavascriptExecutor) driver;
-		return (WebElement) js.executeScript(value);
 	}
 
 }
